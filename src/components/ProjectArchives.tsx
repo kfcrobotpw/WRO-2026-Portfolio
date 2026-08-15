@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { PROJECTS_DATA } from '../data/portfolioData';
 import { ProjectItem } from '../types';
+import { usePortfolio } from '../context/PortfolioContext';
+import { EditProjectModal } from './modals/EditProjectModal';
 import { 
   Cpu, 
   Bot, 
@@ -13,11 +14,16 @@ import {
   X, 
   ShieldCheck, 
   ExternalLink,
-  RotateCcw
+  RotateCcw,
+  Plus,
+  Edit3
 } from 'lucide-react';
 
 export const ProjectArchives: React.FC = () => {
+  const { projects, addProject, updateProject, deleteProject, isAdmin } = usePortfolio();
   const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
+  const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'blueprint' | 'code' | 'sim'>('overview');
 
   // Interactive PID Simulator state inside project modal
@@ -50,9 +56,20 @@ export const ProjectArchives: React.FC = () => {
       
       {/* Section Header */}
       <div className="text-center space-y-4 mb-12 sm:mb-16">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-['Orbitron'] text-white tracking-wider">
-          Project Archives
-        </h2>
+        <div className="inline-flex items-center justify-center gap-3">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-['Orbitron'] text-white tracking-wider">
+            Project Archives
+          </h2>
+          {isAdmin && (
+            <button
+              onClick={() => setIsCreating(true)}
+              className="px-3 py-1 text-xs font-mono font-bold text-black bg-cyan-400 hover:bg-cyan-300 rounded-lg flex items-center gap-1.5 shadow-[0_0_15px_rgba(34,211,238,0.6)] cursor-pointer"
+            >
+              <Plus size={13} />
+              <span>프로젝트 추가</span>
+            </button>
+          )}
+        </div>
         <p className="text-sm text-slate-400 max-w-xl mx-auto font-sans">
           실제 대회 및 연구 목적으로 설계·제작된 로봇 하드웨어 & 자율 소프트웨어 시스템
         </p>
@@ -61,12 +78,23 @@ export const ProjectArchives: React.FC = () => {
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        {PROJECTS_DATA.map((proj) => (
+        {projects.map((proj) => (
           <div
             key={proj.id}
             id={`project-card-${proj.id}`}
             className="relative rounded-2xl border border-cyan-900/50 bg-[#08111e]/90 backdrop-blur-md overflow-hidden flex flex-col justify-between group hover:border-cyan-400/60 transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.5)] hover:shadow-[0_0_30px_rgba(34,211,238,0.2)]"
           >
+            {/* Admin Edit Trigger */}
+            {isAdmin && (
+              <button
+                onClick={() => setEditingProject(proj)}
+                className="absolute top-3 left-3 p-1.5 rounded-lg bg-cyan-950/90 border border-cyan-400/60 text-cyan-300 hover:bg-cyan-800 hover:text-white transition-colors z-20"
+                title="프로젝트 수정"
+              >
+                <Edit3 size={14} />
+              </button>
+            )}
+
             {/* Top Blueprint Graphic Preview Banner */}
             <div className="relative h-44 sm:h-48 w-full bg-[#050b14] border-b border-cyan-900/40 p-3 overflow-hidden flex items-center justify-center">
               
@@ -421,9 +449,24 @@ export const ProjectArchives: React.FC = () => {
 
             {/* Modal Footer */}
             <div className="flex justify-between items-center pt-4 border-t border-slate-800">
-              <span className="text-[11px] text-slate-500 font-mono">
-                SYSTEM VER: 2026.08_RELEASE
-              </span>
+              {isAdmin ? (
+                <button
+                  onClick={() => {
+                    const toEdit = selectedProject;
+                    setSelectedProject(null);
+                    setEditingProject(toEdit);
+                  }}
+                  className="px-4 py-2 text-xs font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/50 rounded-lg flex items-center gap-1.5"
+                >
+                  <Edit3 size={13} />
+                  <span>내용 수정</span>
+                </button>
+              ) : (
+                <span className="text-[11px] text-slate-500 font-mono">
+                  SYSTEM VER: 2026.08_RELEASE
+                </span>
+              )}
+
               <button
                 onClick={() => setSelectedProject(null)}
                 className="px-5 py-2 text-xs font-bold font-['Orbitron'] text-[#060b13] bg-cyan-400 hover:bg-cyan-300 rounded-lg"
@@ -434,6 +477,24 @@ export const ProjectArchives: React.FC = () => {
 
           </div>
         </div>
+      )}
+
+      {/* Edit Project Modal */}
+      {editingProject && (
+        <EditProjectModal
+          initialData={editingProject}
+          onSave={(updated) => updateProject(updated.id, updated)}
+          onDelete={(id) => deleteProject(id)}
+          onClose={() => setEditingProject(null)}
+        />
+      )}
+
+      {/* Create Project Modal */}
+      {isCreating && (
+        <EditProjectModal
+          onSave={(newProj) => addProject(newProj)}
+          onClose={() => setIsCreating(false)}
+        />
       )}
 
     </section>

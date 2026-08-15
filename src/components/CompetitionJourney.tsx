@@ -1,73 +1,34 @@
 import React, { useState } from 'react';
 import { CompetitionLog } from '../types';
-import { INITIAL_COMPETITIONS } from '../data/portfolioData';
-import { CheckCircle2, AlertTriangle, Clock, Plus, Award, Activity, Sparkles, ChevronRight, X } from 'lucide-react';
+import { usePortfolio } from '../context/PortfolioContext';
+import { EditCompetitionModal } from './modals/EditCompetitionModal';
+import { CheckCircle2, AlertTriangle, Clock, Plus, Award, Activity, Sparkles, ChevronRight, X, Edit3, Trash2 } from 'lucide-react';
 
 export const CompetitionJourney: React.FC = () => {
-  const [competitions, setCompetitions] = useState<CompetitionLog[]>(() => {
-    const saved = localStorage.getItem('robot_portfolio_competitions');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return INITIAL_COMPETITIONS;
-      }
-    }
-    return INITIAL_COMPETITIONS;
-  });
+  const { competitions, addCompetition, updateCompetition, deleteCompetition, isAdmin } = usePortfolio();
 
   const [selectedComp, setSelectedComp] = useState<CompetitionLog | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newEntry, setNewEntry] = useState({
-    year: '2027',
-    title: '',
-    teamName: 'K.F.C. F=ma',
-    role: '',
-    wellDone: '',
-    improvement: '',
-    quote: '',
-  });
-
-  const handleAddLog = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newEntry.title || !newEntry.role) return;
-
-    const item: CompetitionLog = {
-      id: `comp-${Date.now()}`,
-      year: newEntry.year,
-      title: newEntry.title,
-      teamName: newEntry.teamName,
-      badgeText: newEntry.teamName,
-      role: newEntry.role,
-      wellDone: newEntry.wellDone || '새로운 로직을 성공적으로 검증함.',
-      improvement: newEntry.improvement || '센서 보정 시간 단축 필요.',
-      quote: newEntry.quote ? `“${newEntry.quote}”` : '“끊임없는 도전과 학습의 과정이었습니다.”',
-    };
-
-    const updated = [item, ...competitions];
-    setCompetitions(updated);
-    localStorage.setItem('robot_portfolio_competitions', JSON.stringify(updated));
-    setShowAddModal(false);
-    setNewEntry({
-      year: '2027',
-      title: '',
-      teamName: 'K.F.C. F=ma',
-      role: '',
-      wellDone: '',
-      improvement: '',
-      quote: '',
-    });
-  };
+  const [editingComp, setEditingComp] = useState<CompetitionLog | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   return (
     <section id="journey" className="relative py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       {/* Section Header */}
       <div className="text-center space-y-4 mb-12 sm:mb-16">
-        <div className="inline-flex items-center justify-center">
+        <div className="inline-flex items-center justify-center gap-3">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-['Orbitron'] text-white tracking-wider">
             Competition Journey
           </h2>
+          {isAdmin && (
+            <button
+              onClick={() => setIsCreating(true)}
+              className="px-3 py-1 text-xs font-mono font-bold text-black bg-cyan-400 hover:bg-cyan-300 rounded-lg flex items-center gap-1.5 shadow-[0_0_15px_rgba(34,211,238,0.6)] cursor-pointer"
+            >
+              <Plus size={13} />
+              <span>대회 추가</span>
+            </button>
+          )}
         </div>
         {/* Sleek cyber connector circle (Direct from Image 2) */}
         <div className="flex items-center justify-center">
@@ -81,7 +42,7 @@ export const CompetitionJourney: React.FC = () => {
       {/* Main Competition Cards List */}
       <div className="max-w-4xl mx-auto space-y-8">
         
-        {competitions.map((comp, idx) => (
+        {competitions.map((comp) => (
           <div
             key={comp.id}
             id={`competition-card-${comp.id}`}
@@ -90,7 +51,7 @@ export const CompetitionJourney: React.FC = () => {
             {/* Ambient Corner Accent */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
 
-            {/* Top Bar: Title + Team Badge */}
+            {/* Top Bar: Title + Team Badge + Admin Controls */}
             <div className="flex flex-wrap items-start justify-between gap-4 pb-4 border-b border-slate-800/80">
               <div>
                 <span className="text-xs font-mono font-bold text-cyan-400 tracking-wider">
@@ -101,10 +62,22 @@ export const CompetitionJourney: React.FC = () => {
                 </h3>
               </div>
 
-              {/* Purple Accent Team Badge (Direct from Image 2) */}
-              <div className="px-4 py-1.5 rounded-lg border border-purple-500/80 bg-purple-950/30 text-purple-300 text-xs font-['Orbitron'] font-bold tracking-widest text-center shadow-[0_0_15px_rgba(168,85,247,0.25)]">
-                <span className="block leading-tight">K.F.C.</span>
-                <span className="text-[10px] text-purple-400 font-mono">F=ma</span>
+              <div className="flex items-center gap-2">
+                {/* Purple Accent Team Badge (Direct from Image 2) */}
+                <div className="px-4 py-1.5 rounded-lg border border-purple-500/80 bg-purple-950/30 text-purple-300 text-xs font-['Orbitron'] font-bold tracking-widest text-center shadow-[0_0_15px_rgba(168,85,247,0.25)]">
+                  <span className="block leading-tight">{comp.teamName || 'K.F.C.'}</span>
+                  <span className="text-[10px] text-purple-400 font-mono">F=ma</span>
+                </div>
+
+                {isAdmin && (
+                  <button
+                    onClick={() => setEditingComp(comp)}
+                    className="p-1.5 rounded-lg bg-cyan-950/70 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-900 hover:text-white transition-colors cursor-pointer"
+                    title="대회 기록 수정"
+                  >
+                    <Edit3 size={15} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -219,7 +192,7 @@ export const CompetitionJourney: React.FC = () => {
           {/* Add New Entry Button */}
           <button
             id="add-journey-btn"
-            onClick={() => setShowAddModal(true)}
+            onClick={() => setIsCreating(true)}
             className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 hover:bg-cyan-950/60 border border-slate-700 hover:border-cyan-500/50 text-xs font-mono text-cyan-300 transition-all cursor-pointer"
           >
             <Plus size={14} />
@@ -229,120 +202,25 @@ export const CompetitionJourney: React.FC = () => {
 
       </div>
 
-      {/* Modal for adding a new competition log */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="relative w-full max-w-lg bg-[#08111e] border border-cyan-500/40 rounded-2xl p-6 sm:p-8 shadow-[0_0_40px_rgba(34,211,238,0.2)] space-y-5">
-            
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold font-['Orbitron'] text-white">NEW COMPETITION LOG</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
-                <X size={18} />
-              </button>
-            </div>
+      {/* Edit Competition Modal */}
+      {editingComp && (
+        <EditCompetitionModal
+          initialData={editingComp}
+          onSave={(updated) => updateCompetition(updated.id, updated)}
+          onDelete={(id) => deleteCompetition(id)}
+          onClose={() => setEditingComp(null)}
+        />
+      )}
 
-            <form onSubmit={handleAddLog} className="space-y-4 text-xs font-mono">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-400 mb-1">연도 (Year)</label>
-                  <input
-                    type="text"
-                    value={newEntry.year}
-                    onChange={(e) => setNewEntry({ ...newEntry, year: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-slate-200 focus:border-cyan-400 outline-none"
-                    placeholder="2027"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-400 mb-1">팀 이름 (Team)</label>
-                  <input
-                    type="text"
-                    value={newEntry.teamName}
-                    onChange={(e) => setNewEntry({ ...newEntry, teamName: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-slate-200 focus:border-cyan-400 outline-none"
-                    placeholder="K.F.C. F=ma"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-400 mb-1">대회명 (Competition Name)</label>
-                <input
-                  type="text"
-                  required
-                  value={newEntry.title}
-                  onChange={(e) => setNewEntry({ ...newEntry, title: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-slate-200 focus:border-cyan-400 outline-none"
-                  placeholder="2027 WRO Korea Open Final"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-400 mb-1">역할 (Role)</label>
-                <input
-                  type="text"
-                  required
-                  value={newEntry.role}
-                  onChange={(e) => setNewEntry({ ...newEntry, role: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-slate-200 focus:border-cyan-400 outline-none"
-                  placeholder="메인 프로그래머, 섀시 기구학 설계"
-                />
-              </div>
-
-              <div>
-                <label className="block text-cyan-400 mb-1">잘한 점 (Strengths)</label>
-                <input
-                  type="text"
-                  value={newEntry.wellDone}
-                  onChange={(e) => setNewEntry({ ...newEntry, wellDone: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-slate-200 focus:border-cyan-400 outline-none"
-                  placeholder="센서 융합을 통한 완벽한 라인트레이싱 달성"
-                />
-              </div>
-
-              <div>
-                <label className="block text-rose-400 mb-1">아쉬운 점 (Improvements)</label>
-                <input
-                  type="text"
-                  value={newEntry.improvement}
-                  onChange={(e) => setNewEntry({ ...newEntry, improvement: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-slate-200 focus:border-cyan-400 outline-none"
-                  placeholder="배터리 잔량 관리에 대한 사전 체크리스트 보완"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-400 mb-1">한 줄 소감 (Quote)</label>
-                <input
-                  type="text"
-                  value={newEntry.quote}
-                  onChange={(e) => setNewEntry({ ...newEntry, quote: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-slate-200 focus:border-cyan-400 outline-none"
-                  placeholder="실패를 두려워하지 않고 끝까지 완주했다."
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-slate-400 hover:text-white"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 font-bold text-[#060b13] bg-cyan-400 hover:bg-cyan-300 rounded font-['Orbitron']"
-                >
-                  저장하기
-                </button>
-              </div>
-            </form>
-
-          </div>
-        </div>
+      {/* Create Competition Modal */}
+      {isCreating && (
+        <EditCompetitionModal
+          onSave={(newComp) => addCompetition(newComp)}
+          onClose={() => setIsCreating(false)}
+        />
       )}
 
     </section>
   );
 };
+

@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { HeroRobotVisual } from './HeroRobotVisual';
-import { ArrowRight, FileText, ChevronDown, Check, Sparkles, Terminal } from 'lucide-react';
+import { ArrowRight, FileText, ChevronDown, Check, Sparkles, Terminal, Edit3 } from 'lucide-react';
 import { RobotLogo } from './RobotLogo';
+import { usePortfolio } from '../context/PortfolioContext';
+import { EditHeroModal } from './modals/EditHeroModal';
 
 interface HeroProps {
   onNavigate: (sectionId: string) => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
+  const { heroData, updateHeroData, isAdmin } = usePortfolio();
   const [showResumeModal, setShowResumeModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   return (
     <section
@@ -26,33 +30,44 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
           <div className="lg:col-span-6 space-y-6 sm:space-y-8">
             
             {/* Top Identity Tag / Mobile Badge */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-cyan-300 text-xs font-mono tracking-wider">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                <span className="font-['Orbitron'] font-semibold">ROBOTICS & CODE PORTFOLIO</span>
+                <span className="font-['Orbitron'] font-semibold">{heroData.tagline}</span>
               </div>
+
+              {isAdmin && (
+                <button
+                  id="edit-hero-btn"
+                  onClick={() => setShowEditModal(true)}
+                  className="px-3 py-1 text-xs font-mono font-bold text-black bg-cyan-400 hover:bg-cyan-300 rounded-lg flex items-center gap-1.5 shadow-[0_0_15px_rgba(34,211,238,0.6)] cursor-pointer"
+                >
+                  <Edit3 size={13} />
+                  <span>소개글 편집</span>
+                </button>
+              )}
             </div>
 
             {/* Main Headline */}
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-['Orbitron'] tracking-tight text-white leading-tight">
-                Engineering the{' '}
+                {heroData.headlineMain}{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-purple-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.5)]">
-                  Future of Motion
+                  {heroData.headlineHighlight}
                 </span>
               </h1>
               <p className="text-lg sm:text-xl font-medium text-cyan-300/90 font-['Rajdhani'] tracking-wide">
-                My growth throughout Robots and Coding
+                {heroData.subHeadline}
               </p>
             </div>
 
             {/* Korean Bio (Direct from Image 2 & User Request) */}
             <div className="space-y-3">
               <p className="text-base sm:text-lg text-slate-200 font-medium">
-                나는 로봇을 만들고 코딩을 하는 사람이다.
+                {heroData.bioMain}
               </p>
               <p className="text-sm text-slate-400 leading-relaxed font-sans max-w-xl">
-                하드웨어 섀시 기구 설계부터 센서 융합 및 실시간 모터 주행 알고리즘(PID)까지 직접 구현하여 자율주행 미션을 완수합니다.
+                {heroData.bioSub}
               </p>
             </div>
 
@@ -62,10 +77,10 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
               className="relative pl-5 py-3 border-l-4 border-cyan-400 bg-slate-900/40 rounded-r-xl backdrop-blur-sm shadow-[0_0_15px_rgba(34,211,238,0.08)] group hover:bg-slate-900/60 transition-colors"
             >
               <p className="text-base sm:text-lg font-semibold text-slate-100 italic tracking-wide font-sans">
-                “WRO 대회에서 최소 은상은 받는것을 목표로 하겠습니다.”
+                “{heroData.quote}”
               </p>
               <span className="block mt-1 text-xs text-cyan-400/80 font-mono">
-                — 2026 WRO KOREA OPEN TARGET GOAL
+                {heroData.quoteAuthor}
               </span>
             </div>
 
@@ -93,16 +108,22 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             {/* Quick Metrics Bar */}
             <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-800/80 font-mono text-xs">
               <div className="space-y-0.5">
-                <span className="text-cyan-400 text-base font-bold font-['Orbitron']">2026</span>
-                <p className="text-[11px] text-slate-400">WRO Korea Open</p>
+                <span className="text-cyan-400 text-base font-bold font-['Orbitron']">
+                  {heroData.metrics.metric1Val}
+                </span>
+                <p className="text-[11px] text-slate-400">{heroData.metrics.metric1Label}</p>
               </div>
               <div className="space-y-0.5">
-                <span className="text-purple-400 text-base font-bold font-['Orbitron']">1st Award</span>
-                <p className="text-[11px] text-slate-400">연구일지상 수상</p>
+                <span className="text-purple-400 text-base font-bold font-['Orbitron']">
+                  {heroData.metrics.metric2Val}
+                </span>
+                <p className="text-[11px] text-slate-400">{heroData.metrics.metric2Label}</p>
               </div>
               <div className="space-y-0.5">
-                <span className="text-sky-400 text-base font-bold font-['Orbitron']">7+ Stack</span>
-                <p className="text-[11px] text-slate-400">Core Protocols</p>
+                <span className="text-sky-400 text-base font-bold font-['Orbitron']">
+                  {heroData.metrics.metric3Val}
+                </span>
+                <p className="text-[11px] text-slate-400">{heroData.metrics.metric3Label}</p>
               </div>
             </div>
 
@@ -115,6 +136,15 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
 
         </div>
       </div>
+
+      {/* Edit Hero Modal */}
+      {showEditModal && (
+        <EditHeroModal
+          heroData={heroData}
+          onSave={updateHeroData}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
 
       {/* Resume / Profile Summary Modal */}
       {showResumeModal && (

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { ACHIEVEMENTS_DATA } from '../data/portfolioData';
 import { AchievementItem } from '../types';
-import { Trophy, Award, BookOpen, Star, Sparkles, Check, X, ShieldCheck } from 'lucide-react';
+import { usePortfolio } from '../context/PortfolioContext';
+import { EditAchievementModal } from './modals/EditAchievementModal';
+import { Trophy, Award, BookOpen, Star, Sparkles, Check, X, ShieldCheck, Plus, Edit3 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const Achievements: React.FC = () => {
+  const { achievements, addAchievement, updateAchievement, deleteAchievement, isAdmin } = usePortfolio();
   const [selectedAchievement, setSelectedAchievement] = useState<AchievementItem | null>(null);
+  const [editingAchievement, setEditingAchievement] = useState<AchievementItem | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleOpenAchievement = (ach: AchievementItem) => {
     setSelectedAchievement(ach);
@@ -23,9 +27,20 @@ export const Achievements: React.FC = () => {
       
       {/* Section Header */}
       <div className="text-center space-y-4 mb-12 sm:mb-16">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-['Orbitron'] text-white tracking-wider">
-          Achievements
-        </h2>
+        <div className="inline-flex items-center justify-center gap-3">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-['Orbitron'] text-white tracking-wider">
+            Achievements
+          </h2>
+          {isAdmin && (
+            <button
+              onClick={() => setIsCreating(true)}
+              className="px-3 py-1 text-xs font-mono font-bold text-black bg-purple-400 hover:bg-purple-300 rounded-lg flex items-center gap-1.5 shadow-[0_0_15px_rgba(168,85,247,0.6)] cursor-pointer"
+            >
+              <Plus size={13} />
+              <span>수상 추가</span>
+            </button>
+          )}
+        </div>
         <p className="text-sm text-slate-400 max-w-xl mx-auto font-sans">
           로보틱스 대회 및 엔지니어링 연구 성과
         </p>
@@ -33,14 +48,28 @@ export const Achievements: React.FC = () => {
       </div>
 
       {/* Main Achievement Card (Direct from Image 2) */}
-      <div className="max-w-2xl mx-auto">
-        {ACHIEVEMENTS_DATA.map((ach) => (
+      <div className="max-w-2xl mx-auto space-y-6">
+        {achievements.map((ach) => (
           <div
             key={ach.id}
             id={`achievement-card-${ach.id}`}
             onClick={() => handleOpenAchievement(ach)}
             className="relative rounded-2xl border border-purple-900/40 bg-[#08111e]/90 backdrop-blur-md p-8 sm:p-10 text-center flex flex-col items-center justify-center gap-4 cursor-pointer group hover:border-purple-500/70 hover:bg-[#0d182a] transition-all duration-300 shadow-[0_0_30px_rgba(168,85,247,0.15)] hover:shadow-[0_0_40px_rgba(168,85,247,0.35)]"
           >
+            {/* Admin Edit Trigger */}
+            {isAdmin && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingAchievement(ach);
+                }}
+                className="absolute top-4 right-4 p-1.5 rounded-lg bg-purple-950/80 border border-purple-500/60 text-purple-300 hover:bg-purple-900 hover:text-white transition-colors z-10"
+                title="수상 이력 수정"
+              >
+                <Edit3 size={14} />
+              </button>
+            )}
+
             {/* Ambient Purple Glow */}
             <div className="absolute inset-0 bg-purple-600/5 rounded-2xl pointer-events-none group-hover:bg-purple-600/10 transition-colors" />
 
@@ -128,7 +157,21 @@ export const Achievements: React.FC = () => {
               )}
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-slate-800">
+            <div className="flex justify-between items-center pt-4 border-t border-slate-800">
+              {isAdmin ? (
+                <button
+                  onClick={() => {
+                    const toEdit = selectedAchievement;
+                    setSelectedAchievement(null);
+                    setEditingAchievement(toEdit);
+                  }}
+                  className="px-4 py-2 text-xs font-mono font-bold text-purple-300 bg-purple-950/80 border border-purple-500/50 rounded-lg flex items-center gap-1.5"
+                >
+                  <Edit3 size={13} />
+                  <span>내용 수정</span>
+                </button>
+              ) : <div />}
+
               <button
                 onClick={() => setSelectedAchievement(null)}
                 className="px-5 py-2 text-xs font-bold font-['Orbitron'] text-[#060b13] bg-purple-400 hover:bg-purple-300 rounded-lg"
@@ -141,6 +184,25 @@ export const Achievements: React.FC = () => {
         </div>
       )}
 
+      {/* Edit Achievement Modal */}
+      {editingAchievement && (
+        <EditAchievementModal
+          initialData={editingAchievement}
+          onSave={(updated) => updateAchievement(updated.id, updated)}
+          onDelete={(id) => deleteAchievement(id)}
+          onClose={() => setEditingAchievement(null)}
+        />
+      )}
+
+      {/* Create Achievement Modal */}
+      {isCreating && (
+        <EditAchievementModal
+          onSave={(newAch) => addAchievement(newAch)}
+          onClose={() => setIsCreating(false)}
+        />
+      )}
+
     </section>
   );
 };
+

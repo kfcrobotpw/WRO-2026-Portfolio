@@ -1,3 +1,22 @@
+export interface HeroData {
+  tagline: string;
+  headlineMain: string;
+  headlineHighlight: string;
+  subHeadline: string;
+  bioMain: string;
+  bioSub: string;
+  quote: string;
+  quoteAuthor: string;
+  metrics: {
+    metric1Val: string;
+    metric1Label: string;
+    metric2Val: string;
+    metric2Label: string;
+    metric3Val: string;
+    metric3Label: string;
+  };
+}
+
 export interface CompetitionLog {
   id: string;
   year: string;

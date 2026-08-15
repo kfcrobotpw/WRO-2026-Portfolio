@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { PortfolioProvider } from './context/PortfolioContext';
 import { Navbar } from './components/Navbar';
+import { AdminToolbar } from './components/AdminToolbar';
+import { LoginModal } from './components/LoginModal';
 import { Hero } from './components/Hero';
 import { CompetitionJourney } from './components/CompetitionJourney';
 import { CoreCapabilities } from './components/CoreCapabilities';
@@ -8,7 +11,7 @@ import { ProjectArchives } from './components/ProjectArchives';
 import { InitiateConnection } from './components/InitiateConnection';
 import { Footer } from './components/Footer';
 
-export default function App() {
+function PortfolioApp() {
   const [activeSection, setActiveSection] = useState('about');
 
   // Handle section scrolling
@@ -70,6 +73,12 @@ export default function App() {
       {/* Sticky Navigation Header */}
       <Navbar activeSection={activeSection} onNavigate={scrollToSection} />
 
+      {/* Admin Mode Floating Toolbar */}
+      <AdminToolbar />
+
+      {/* Login Authentication Modal */}
+      <LoginModal />
+
       {/* Main Content Sections */}
       <main className="relative z-10 space-y-4 sm:space-y-8">
         
@@ -99,3 +108,12 @@ export default function App() {
     </div>
   );
 }
+
+export default function App() {
+  return (
+    <PortfolioProvider>
+      <PortfolioApp />
+    </PortfolioProvider>
+  );
+}
+

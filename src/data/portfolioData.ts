@@ -1,4 +1,23 @@
-import { CompetitionLog, SkillItem, AchievementItem, ProjectItem } from '../types';
+import { HeroData, CompetitionLog, SkillItem, AchievementItem, ProjectItem } from '../types';
+
+export const INITIAL_HERO_DATA: HeroData = {
+  tagline: 'ROBOTICS & CODE PORTFOLIO',
+  headlineMain: 'Engineering the',
+  headlineHighlight: 'Future of Motion',
+  subHeadline: 'My growth throughout Robots and Coding',
+  bioMain: '나는 로봇을 만들고 코딩을 하는 사람이다.',
+  bioSub: '하드웨어 섀시 기구 설계부터 센서 융합 및 실시간 모터 주행 알고리즘(PID)까지 직접 구현하여 자율주행 미션을 완수합니다.',
+  quote: 'WRO 대회에서 최소 은상은 받는것을 목표로 하겠습니다.',
+  quoteAuthor: '— 2026 WRO KOREA OPEN TARGET GOAL',
+  metrics: {
+    metric1Val: '2026',
+    metric1Label: 'WRO Korea Open',
+    metric2Val: '1st Award',
+    metric2Label: '연구일지상 수상',
+    metric3Val: '7+ Stack',
+    metric3Label: 'Core Protocols'
+  }
+};
 
 export const INITIAL_COMPETITIONS: CompetitionLog[] = [
   {
