@@ -1,0 +1,6 @@
+{
+  "name": "Robot Portfolio",
+  "description": "Robotics & Coding Portfolio showcasing WRO competition journeys, core capabilities, achievements, and technical project archives.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
