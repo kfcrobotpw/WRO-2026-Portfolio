@@ -111,7 +111,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onNav
                   id="nav-logout-btn"
                   onClick={logout}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/70 hover:bg-red-900/90 border border-red-500/60 text-red-300 hover:text-white text-xs font-mono font-bold transition-all cursor-pointer shadow-sm hover:shadow-[0_0_12px_rgba(239,68,68,0.35)]"
-                  title="관리자 로그아웃"
+                  title="관리자 로그아웃 (단축키: ESC)"
                 >
                   <LogOut size={13} className="text-red-400" />
                   <span className="text-[11px] tracking-wide">로그아웃</span>

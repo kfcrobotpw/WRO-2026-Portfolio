@@ -30,7 +30,7 @@ function checkIsAdminRoute(): boolean {
 }
 
 function PortfolioApp() {
-  const { isAdmin } = usePortfolio();
+  const { isAdmin, logout } = usePortfolio();
   const [isAdminView, setIsAdminView] = useState<boolean>(() => checkIsAdminRoute());
   const [activeSection, setActiveSection] = useState('about');
   const [showPhotoManager, setShowPhotoManager] = useState(false);
@@ -60,6 +60,25 @@ function PortfolioApp() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAdmin]);
+
+  // Shortcut Escape to logout when logged in
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.code === 'Escape') {
+        e.preventDefault();
+        setShowPhotoManager(false);
+        logout();
+        if (isAdminView) {
+          navigateToHome();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAdmin, isAdminView, logout]);
 
   // Listen to browser forward/back buttons & hash/URL changes
   useEffect(() => {
