@@ -3,7 +3,6 @@ import { usePortfolio } from '../context/PortfolioContext';
 import { PhotoManagerModal } from './modals/PhotoManagerModal';
 import { 
   ShieldCheck, 
-  LogOut, 
   RotateCcw, 
   Download, 
   Cloud,
@@ -18,7 +17,6 @@ import confetti from 'canvas-confetti';
 export const AdminToolbar: React.FC = () => {
   const { 
     isAdmin, 
-    logout, 
     resetAllToDefault,
     currentUser,
     isFirebaseSyncing,
@@ -131,16 +129,6 @@ export const AdminToolbar: React.FC = () => {
             >
               <RotateCcw size={13} />
               <span className="hidden md:inline">초기화</span>
-            </button>
-
-            {/* Logout Button */}
-            <button
-              id="admin-logout-btn"
-              onClick={logout}
-              className="px-3 py-1 rounded bg-red-950/60 border border-red-500/60 hover:bg-red-900 text-red-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer font-bold"
-            >
-              <LogOut size={13} />
-              <span>로그아웃</span>
             </button>
           </div>
 

@@ -96,24 +96,25 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onNav
           {/* Right Action / Admin Status */}
           <div className="hidden md:flex items-center z-10 min-w-[32px] justify-end">
             {isAdmin && (
-              <div className="flex items-center gap-1.5 pl-2 border-l border-slate-800">
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
                 <button
                   onClick={handleAdminClick}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-500/50 text-emerald-300 text-xs font-mono font-bold transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-500/50 text-emerald-300 text-xs font-mono font-bold transition-all cursor-pointer shadow-sm hover:shadow-[0_0_12px_rgba(16,185,129,0.3)]"
                   title="관리자 제어 센터 (/admin) 열기"
                 >
                   <ShieldCheck size={14} className="text-emerald-400" />
-                  <span className="text-[11px]">ADMIN ON</span>
+                  <span className="text-[11px] tracking-wide">ADMIN ON</span>
                   <Settings size={12} className="text-emerald-400" />
                 </button>
 
                 <button
                   id="nav-logout-btn"
                   onClick={logout}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-950/40 border border-transparent hover:border-red-500/40 transition-colors cursor-pointer"
-                  title="로그아웃"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/70 hover:bg-red-900/90 border border-red-500/60 text-red-300 hover:text-white text-xs font-mono font-bold transition-all cursor-pointer shadow-sm hover:shadow-[0_0_12px_rgba(239,68,68,0.35)]"
+                  title="관리자 로그아웃"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={13} className="text-red-400" />
+                  <span className="text-[11px] tracking-wide">로그아웃</span>
                 </button>
               </div>
             )}
@@ -122,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onNav
           {/* Mobile menu and controls */}
           <div className="flex md:hidden items-center gap-2">
             {isAdmin && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={handleAdminClick}
                   className="px-2.5 py-1.5 text-[10px] font-bold font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-500/50 rounded flex items-center gap-1"
@@ -132,9 +133,11 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onNav
                 </button>
                 <button
                   onClick={logout}
-                  className="px-2 py-1.5 text-[10px] font-bold font-mono text-red-300 bg-red-950/60 border border-red-500/50 rounded flex items-center gap-1"
+                  className="px-2.5 py-1.5 text-[10px] font-bold font-mono text-red-300 bg-red-950/80 border border-red-500/50 rounded flex items-center gap-1"
+                  title="로그아웃"
                 >
                   <LogOut size={12} />
+                  <span>로그아웃</span>
                 </button>
               </div>
             )}
