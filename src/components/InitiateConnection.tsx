@@ -1,21 +1,44 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2, Radio, Sparkles, Mail, User, MessageSquare } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 export const InitiateConnection: React.FC = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
-  const [topic, setTopic] = useState('Competition & Collaboration');
   const [status, setStatus] = useState<'idle' | 'transmitting' | 'success'>('idle');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
     setStatus('transmitting');
 
-    // Simulate cyber transmission link
+    const transmissionData = {
+      name: name.trim() || 'Anonymous Operative',
+      email: email.trim(),
+      message: message.trim() || 'Initiated direct communication ping.',
+      createdAt: new Date().toISOString(),
+    };
+
+    // Save to Firestore messages collection
+    try {
+      await addDoc(collection(db, 'messages'), transmissionData);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'messages');
+    }
+
+    // Save transmission to local storage history as backup
+    const prevMessages = JSON.parse(localStorage.getItem('robot_portfolio_transmissions') || '[]');
+    prevMessages.push({
+      id: Date.now(),
+      ...transmissionData
+    });
+    localStorage.setItem('robot_portfolio_transmissions', JSON.stringify(prevMessages));
+
+    // Complete transmission
     setTimeout(() => {
       setStatus('success');
       confetti({
@@ -25,31 +48,19 @@ export const InitiateConnection: React.FC = () => {
         colors: ['#22d3ee', '#38bdf8', '#a855f7'],
       });
 
-      // Save transmission to local storage history
-      const prevMessages = JSON.parse(localStorage.getItem('robot_portfolio_transmissions') || '[]');
-      prevMessages.push({
-        id: Date.now(),
-        name: name || 'Anonymous Operative',
-        email,
-        message: message || 'Initiated direct communication ping.',
-        topic,
-        timestamp: new Date().toISOString(),
-      });
-      localStorage.setItem('robot_portfolio_transmissions', JSON.stringify(prevMessages));
-
       // Reset form after short delay
       setTimeout(() => {
         setEmail('');
         setName('');
         setMessage('');
       }, 1000);
-    }, 1200);
+    }, 600);
   };
 
   return (
     <section id="contact" className="relative py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
-      {/* Centered Connection Card (Direct from Image 2) */}
+      {/* Centered Connection Card */}
       <div className="max-w-xl mx-auto">
         <div
           id="initiate-connection-card"
@@ -85,7 +96,7 @@ export const InitiateConnection: React.FC = () => {
                   TRANSMISSION RECEIVED
                 </h3>
                 <p className="text-xs text-cyan-400 font-mono">
-                  신호가 성공적으로 전송되었습니다. 곧 연락드리겠습니다!
+                  신호가 Firestore 클라우드 데이터베이스에 안전하게 전송되었습니다!
                 </p>
               </div>
               <button
@@ -114,7 +125,7 @@ export const InitiateConnection: React.FC = () => {
                 </div>
               </div>
 
-              {/* Email Input Field (Direct from Image 2: "Your Communication Link (Email)") */}
+              {/* Email Input Field */}
               <div className="space-y-1">
                 <label className="block text-[11px] font-mono text-slate-300 font-semibold">
                   Your Communication Link (Email) <span className="text-cyan-400">*</span>
@@ -146,7 +157,7 @@ export const InitiateConnection: React.FC = () => {
                 />
               </div>
 
-              {/* Transmit Button (Direct from Image 2: "TRANSMIT MESSAGE") */}
+              {/* Transmit Button */}
               <div className="pt-2">
                 <button
                   id="transmit-message-btn"

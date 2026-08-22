@@ -1,0 +1,143 @@
+{
+  "entities": {
+    "HeroSettings": {
+      "title": "Hero Section Configuration",
+      "description": "Configurable hero section texts, bio, metrics, and quotes",
+      "type": "object",
+      "properties": {
+        "tagline": { "type": "string", "maxLength": 200 },
+        "headlineMain": { "type": "string", "maxLength": 200 },
+        "headlineHighlight": { "type": "string", "maxLength": 200 },
+        "subHeadline": { "type": "string", "maxLength": 500 },
+        "bioMain": { "type": "string", "maxLength": 1000 },
+        "bioSub": { "type": "string", "maxLength": 1000 },
+        "quote": { "type": "string", "maxLength": 500 },
+        "quoteAuthor": { "type": "string", "maxLength": 200 },
+        "metrics": {
+          "type": "object",
+          "description": "Key telemetry stats"
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tagline", "headlineMain", "subHeadline"]
+    },
+    "Competition": {
+      "title": "Competition Log",
+      "description": "Historical competition records, achievements, and telemetry notes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "year": { "type": "string", "maxLength": 20 },
+        "title": { "type": "string", "maxLength": 300 },
+        "teamName": { "type": "string", "maxLength": 200 },
+        "badgeText": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "maxLength": 300 },
+        "wellDone": { "type": "string", "maxLength": 1000 },
+        "improvement": { "type": "string", "maxLength": 1000 },
+        "quote": { "type": "string", "maxLength": 500 },
+        "roundsData": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "role"]
+    },
+    "Skill": {
+      "title": "Core Capability Skill",
+      "description": "Robotics engineering and programming skill entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "enum": ["programming", "hardware", "creative", "ai"] },
+        "icon": { "type": "string", "maxLength": 100 },
+        "level": { "type": "number" },
+        "shortDesc": { "type": "string", "maxLength": 500 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "tags": { "type": "array" },
+        "codeSample": { "type": "string", "maxLength": 5000 },
+        "wroApplication": { "type": "string", "maxLength": 2000 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "category", "level"]
+    },
+    "Achievement": {
+      "title": "Achievement Item",
+      "description": "Awards, honors, and engineering journal milestones",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 300 },
+        "awardName": { "type": "string", "maxLength": 300 },
+        "year": { "type": "string", "maxLength": 50 },
+        "organization": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "badgeColor": { "type": "string", "maxLength": 50 },
+        "date": { "type": "string", "maxLength": 100 },
+        "journalHighlights": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "awardName"]
+    },
+    "Project": {
+      "title": "Project Archive Item",
+      "description": "Robotics engineering project with blueprints, specs, and code",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 300 },
+        "subtitle": { "type": "string", "maxLength": 300 },
+        "category": { "type": "string", "maxLength": 100 },
+        "tag": { "type": "string", "maxLength": 100 },
+        "tags": { "type": "array" },
+        "summary": { "type": "string", "maxLength": 1000 },
+        "description": { "type": "string", "maxLength": 3000 },
+        "blueprintTitle": { "type": "string", "maxLength": 300 },
+        "specs": { "type": "array" },
+        "keyFeatures": { "type": "array" },
+        "codeSnippet": { "type": "object" },
+        "imageType": { "type": "string", "enum": ["blueprint", "drone", "quadruped"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "category"]
+    },
+    "ContactMessage": {
+      "title": "Contact Connection Message",
+      "description": "Incoming inquiries and communication requests",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 200 },
+        "email": { "type": "string", "maxLength": 200 },
+        "organization": { "type": "string", "maxLength": 200 },
+        "message": { "type": "string", "maxLength": 4000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "message"]
+    }
+  },
+  "firestore": {
+    "/settings/hero": {
+      "schema": "HeroSettings",
+      "description": "Singleton document storing the hero section content"
+    },
+    "/competitions/{competitionId}": {
+      "schema": "Competition",
+      "description": "Collection of robotics competition logs and reflections"
+    },
+    "/skills/{skillId}": {
+      "schema": "Skill",
+      "description": "Collection of technical capabilities and skill details"
+    },
+    "/achievements/{achievementId}": {
+      "schema": "Achievement",
+      "description": "Collection of awards and engineering records"
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Collection of robotics engineering project blueprints"
+    },
+    "/messages/{messageId}": {
+      "schema": "ContactMessage",
+      "description": "Inquiries sent from the connection form"
+    }
+  }
+}

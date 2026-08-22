@@ -7,6 +7,14 @@ export interface HeroData {
   bioSub: string;
   quote: string;
   quoteAuthor: string;
+  imageUrl?: string;
+  imageMode?: 'visual' | 'photo' | 'both';
+  imageFilter?: {
+    brightness?: number;
+    contrast?: number;
+    glow?: boolean;
+    grayscale?: boolean;
+  };
   metrics: {
     metric1Val: string;
     metric1Label: string;
@@ -27,6 +35,8 @@ export interface CompetitionLog {
   wellDone: string;
   improvement: string;
   quote: string;
+  imageUrl?: string;
+  imageCaption?: string;
   roundsData?: {
     round: number;
     score: number;
@@ -47,6 +57,7 @@ export interface SkillItem {
   tags: string[];
   codeSample?: string;
   wroApplication?: string;
+  imageUrl?: string;
 }
 
 export interface AchievementItem {
@@ -58,6 +69,8 @@ export interface AchievementItem {
   description: string;
   badgeColor?: string;
   date?: string;
+  imageUrl?: string;
+  imageCaption?: string;
   journalHighlights?: string[];
 }
 
@@ -79,4 +92,7 @@ export interface ProjectItem {
     description: string;
   };
   imageType: 'blueprint' | 'drone' | 'quadruped';
+  imageUrl?: string;
+  imageCaption?: string;
 }
+

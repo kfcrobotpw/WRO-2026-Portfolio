@@ -1,0 +1,101 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'kfcrobotpw@gmail.com' ||
+        (request.auth.token.email_verified == true && request.auth.token.email == 'kfcrobotpw@gmail.com') ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Settings (Hero singleton)
+    match /settings/{settingId} {
+      allow read: if isValidId(settingId);
+      allow create, update: if isValidId(settingId) && (
+        isAdmin() ||
+        (incoming().tagline is string && incoming().headlineMain is string)
+      );
+      allow delete: if isValidId(settingId) && isAdmin();
+    }
+
+    // Competitions
+    match /competitions/{competitionId} {
+      allow read: if isValidId(competitionId);
+      allow create, update: if isValidId(competitionId) && (
+        isAdmin() ||
+        (incoming().title is string && incoming().title.size() <= 300)
+      );
+      allow delete: if isValidId(competitionId) && isAdmin();
+    }
+
+    // Skills
+    match /skills/{skillId} {
+      allow read: if isValidId(skillId);
+      allow create, update: if isValidId(skillId) && (
+        isAdmin() ||
+        (incoming().name is string && incoming().name.size() <= 200)
+      );
+      allow delete: if isValidId(skillId) && isAdmin();
+    }
+
+    // Achievements
+    match /achievements/{achievementId} {
+      allow read: if isValidId(achievementId);
+      allow create, update: if isValidId(achievementId) && (
+        isAdmin() ||
+        (incoming().title is string && incoming().title.size() <= 300)
+      );
+      allow delete: if isValidId(achievementId) && isAdmin();
+    }
+
+    // Projects
+    match /projects/{projectId} {
+      allow read: if isValidId(projectId);
+      allow create, update: if isValidId(projectId) && (
+        isAdmin() ||
+        (incoming().title is string && incoming().title.size() <= 300)
+      );
+      allow delete: if isValidId(projectId) && isAdmin();
+    }
+
+    // Contact messages (Anyone can submit a valid inquiry)
+    match /messages/{messageId} {
+      allow read: if isValidId(messageId) && isAdmin();
+      allow create: if isValidId(messageId) &&
+        incoming().name is string && incoming().name.size() <= 200 &&
+        incoming().email is string && incoming().email.size() <= 200 &&
+        incoming().message is string && incoming().message.size() <= 4000;
+      allow update, delete: if isValidId(messageId) && isAdmin();
+    }
+
+    // Connection test document
+    match /test/{testId} {
+      allow read: if isValidId(testId);
+      allow write: if isAdmin();
+    }
+  }
+}

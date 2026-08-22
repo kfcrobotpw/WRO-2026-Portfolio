@@ -2,7 +2,21 @@ import React, { useState } from 'react';
 import { CompetitionLog } from '../types';
 import { usePortfolio } from '../context/PortfolioContext';
 import { EditCompetitionModal } from './modals/EditCompetitionModal';
-import { CheckCircle2, AlertTriangle, Clock, Plus, Award, Activity, Sparkles, ChevronRight, X, Edit3, Trash2 } from 'lucide-react';
+import { 
+  CheckCircle2, 
+  AlertTriangle, 
+  Clock, 
+  Plus, 
+  Award, 
+  Activity, 
+  Sparkles, 
+  ChevronRight, 
+  X, 
+  Edit3, 
+  Trash2,
+  Camera,
+  Maximize2
+} from 'lucide-react';
 
 export const CompetitionJourney: React.FC = () => {
   const { competitions, addCompetition, updateCompetition, deleteCompetition, isAdmin } = usePortfolio();
@@ -10,6 +24,7 @@ export const CompetitionJourney: React.FC = () => {
   const [selectedComp, setSelectedComp] = useState<CompetitionLog | null>(null);
   const [editingComp, setEditingComp] = useState<CompetitionLog | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
   return (
     <section id="journey" className="relative py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,7 +45,7 @@ export const CompetitionJourney: React.FC = () => {
             </button>
           )}
         </div>
-        {/* Sleek cyber connector circle (Direct from Image 2) */}
+        {/* Sleek cyber connector circle */}
         <div className="flex items-center justify-center">
           <div className="w-4 h-4 rounded-full border-2 border-cyan-400 bg-[#060b13] shadow-[0_0_10px_#22d3ee] flex items-center justify-center">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
@@ -63,23 +78,62 @@ export const CompetitionJourney: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Purple Accent Team Badge (Direct from Image 2) */}
+                {/* Purple Accent Team Badge */}
                 <div className="px-4 py-1.5 rounded-lg border border-purple-500/80 bg-purple-950/30 text-purple-300 text-xs font-['Orbitron'] font-bold tracking-widest text-center shadow-[0_0_15px_rgba(168,85,247,0.25)]">
                   <span className="block leading-tight">{comp.teamName || 'K.F.C.'}</span>
                   <span className="text-[10px] text-purple-400 font-mono">F=ma</span>
                 </div>
 
                 {isAdmin && (
-                  <button
-                    onClick={() => setEditingComp(comp)}
-                    className="p-1.5 rounded-lg bg-cyan-950/70 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-900 hover:text-white transition-colors cursor-pointer"
-                    title="대회 기록 수정"
-                  >
-                    <Edit3 size={15} />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setEditingComp(comp)}
+                      className="p-1.5 rounded-lg bg-cyan-950/70 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-900 hover:text-white transition-colors cursor-pointer"
+                      title="대회 기록 수정"
+                    >
+                      <Edit3 size={15} />
+                    </button>
+                    <button
+                      onClick={() => setEditingComp(comp)}
+                      className="px-2 py-1 rounded-lg bg-cyan-950/70 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-900 hover:text-white transition-colors text-[10px] font-mono flex items-center gap-1 cursor-pointer"
+                      title="대회 사진 등록/수정"
+                    >
+                      <Camera size={12} />
+                      <span>사진 {comp.imageUrl ? '수정' : '등록'}</span>
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
+
+            {/* Optional Competition Photo Banner */}
+            {comp.imageUrl && (
+              <div className="relative my-4 rounded-xl overflow-hidden border border-cyan-900/60 bg-black/60 h-48 sm:h-64 group/photo">
+                <img
+                  src={comp.imageUrl}
+                  alt={comp.title}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-500"
+                />
+                <div 
+                  className="absolute inset-0 pointer-events-none opacity-20"
+                  style={{
+                    backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.5) 50%)',
+                    backgroundSize: '100% 4px'
+                  }}
+                />
+                <button
+                  onClick={() => setZoomedImage(comp.imageUrl || null)}
+                  className="absolute bottom-3 right-3 px-3 py-1 rounded bg-black/80 border border-cyan-400 text-cyan-300 text-xs font-mono flex items-center gap-1.5 opacity-0 group-hover/photo:opacity-100 transition-opacity cursor-pointer hover:bg-cyan-950"
+                >
+                  <Maximize2 size={13} />
+                  <span>사진 확대</span>
+                </button>
+                <div className="absolute top-3 left-3 px-2 py-0.5 rounded bg-black/80 border border-cyan-500/50 text-[10px] font-mono text-cyan-300">
+                  TOURNAMENT ARENA ARCHIVE
+                </div>
+              </div>
+            )}
 
             {/* Role Summary */}
             <div className="py-4 text-sm sm:text-base text-slate-300">
@@ -160,7 +214,7 @@ export const CompetitionJourney: React.FC = () => {
 
             </div>
 
-            {/* Bottom Quote (Direct from Image 2) */}
+            {/* Bottom Quote */}
             <div className="mt-6 pt-4 text-center border-t border-slate-800/60">
               <p className="text-sm sm:text-base italic font-semibold text-slate-300 tracking-wide font-sans">
                 {comp.quote}
@@ -170,7 +224,7 @@ export const CompetitionJourney: React.FC = () => {
           </div>
         ))}
 
-        {/* Future Experiences Placeholder Box (Direct from Image 2) */}
+        {/* Future Experiences Placeholder Box */}
         <div
           id="future-experiences-box"
           className="relative rounded-2xl border-2 border-dashed border-slate-800 bg-[#060c16]/50 p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-3 group hover:border-cyan-800/80 transition-colors"
@@ -190,14 +244,16 @@ export const CompetitionJourney: React.FC = () => {
           </div>
 
           {/* Add New Entry Button */}
-          <button
-            id="add-journey-btn"
-            onClick={() => setIsCreating(true)}
-            className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 hover:bg-cyan-950/60 border border-slate-700 hover:border-cyan-500/50 text-xs font-mono text-cyan-300 transition-all cursor-pointer"
-          >
-            <Plus size={14} />
-            <span>새 대회 기록 작성하기 (Add Log)</span>
-          </button>
+          {isAdmin && (
+            <button
+              id="add-journey-btn"
+              onClick={() => setIsCreating(true)}
+              className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 hover:bg-cyan-950/60 border border-slate-700 hover:border-cyan-500/50 text-xs font-mono text-cyan-300 transition-all cursor-pointer"
+            >
+              <Plus size={14} />
+              <span>새 대회 기록 작성하기 (Add Log)</span>
+            </button>
+          )}
         </div>
 
       </div>
@@ -206,8 +262,14 @@ export const CompetitionJourney: React.FC = () => {
       {editingComp && (
         <EditCompetitionModal
           initialData={editingComp}
-          onSave={(updated) => updateCompetition(updated.id, updated)}
-          onDelete={(id) => deleteCompetition(id)}
+          onSave={(updated) => {
+            updateCompetition(updated.id, updated);
+            setEditingComp(null);
+          }}
+          onDelete={(id) => {
+            deleteCompetition(id);
+            setEditingComp(null);
+          }}
           onClose={() => setEditingComp(null)}
         />
       )}
@@ -215,12 +277,34 @@ export const CompetitionJourney: React.FC = () => {
       {/* Create Competition Modal */}
       {isCreating && (
         <EditCompetitionModal
-          onSave={(newComp) => addCompetition(newComp)}
+          onSave={(newComp) => {
+            addCompetition(newComp);
+            setIsCreating(false);
+          }}
           onClose={() => setIsCreating(false)}
         />
+      )}
+
+      {/* Zoom Lightbox */}
+      {zoomedImage && (
+        <div 
+          onClick={() => setZoomedImage(null)}
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in"
+        >
+          <div className="relative max-w-4xl max-h-[85vh] rounded-2xl border border-cyan-400 overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.5)]">
+            <img
+              src={zoomedImage}
+              alt="Competition Arena High-Res"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-contain"
+            />
+            <div className="absolute top-4 right-4 px-3 py-1 bg-black/80 border border-cyan-400 text-cyan-300 font-mono text-xs rounded-lg">
+              CLICK ANYWHERE TO CLOSE
+            </div>
+          </div>
+        </div>
       )}
 
     </section>
   );
 };
-
