@@ -17,8 +17,18 @@ export const LoginModal: React.FC = () => {
       setPassword('');
       setErrorMsg('');
       setShowPassword(false);
+
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape' || e.code === 'Escape') {
+          e.preventDefault();
+          closeLoginModal();
+        }
+      };
+
+      window.addEventListener('keydown', handleEscape);
+      return () => window.removeEventListener('keydown', handleEscape);
     }
-  }, [isLoginModalOpen]);
+  }, [isLoginModalOpen, closeLoginModal]);
 
   if (!isLoginModalOpen) return null;
 

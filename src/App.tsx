@@ -30,10 +30,34 @@ function checkIsAdminRoute(): boolean {
 }
 
 function PortfolioApp() {
-  const { isAdmin, logout } = usePortfolio();
+  const { isAdmin, logout, openLoginModal } = usePortfolio();
   const [isAdminView, setIsAdminView] = useState<boolean>(() => checkIsAdminRoute());
   const [activeSection, setActiveSection] = useState('about');
   const [showPhotoManager, setShowPhotoManager] = useState(false);
+
+  // Shortcut Shift + A to open Admin Login Modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target && (
+          target.tagName === 'INPUT' || 
+          target.tagName === 'TEXTAREA' || 
+          target.isContentEditable
+        )
+      ) {
+        return;
+      }
+
+      if (e.shiftKey && (e.key === 'A' || e.key === 'a' || e.code === 'KeyA')) {
+        e.preventDefault();
+        openLoginModal();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [openLoginModal]);
 
   // Shortcut Shift + B to open Photo Manager Modal in main view when logged in
   useEffect(() => {
