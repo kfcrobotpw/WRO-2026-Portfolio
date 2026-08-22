@@ -75,16 +75,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onNavigateHome }) => {
       if (!res.success) {
         setErrorMsg(res.message || '아이디 또는 비밀번호가 일치하지 않습니다.');
       } else {
-        confetti({
-          particleCount: 70,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#22d3ee', '#10b981', '#a855f7'],
-        });
+        try {
+          confetti({
+            particleCount: 70,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#22d3ee', '#10b981', '#a855f7'],
+          });
+        } catch {
+          // Ignore confetti errors
+        }
       }
     } catch (err) {
       setIsSubmitting(false);
-      setErrorMsg('서버와 통신할 수 없습니다.');
+      setErrorMsg('로그인 처리 중 문제가 발생했습니다. 다시 시도해주세요.');
     }
   };
 

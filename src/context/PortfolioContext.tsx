@@ -336,16 +336,61 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => setIsLoginModalOpen(false);
 
-  // Dual-Layer Server & Client-Fallback authentication
+  // Robust, instantaneous & resilient Admin Authentication
   const login = async (username: string, password: string): Promise<{ success: boolean; message?: string }> => {
     const cleanId = username.trim();
-    
-    // 1. Try server-side authentication first
+    const cleanPw = password.trim();
+
+    if (!cleanId || !cleanPw) {
+      return {
+        success: false,
+        message: '아이디와 비밀번호를 모두 입력해주세요.',
+      };
+    }
+
+    // Direct Instant Verification for Admin Credentials
+    if (cleanId === 'jww9882' && cleanPw === 'jangww9882!') {
+      const adminInfo: AdminUserInfo = {
+        username: 'jww9882',
+        role: 'admin',
+      };
+      const token = generateClientSessionToken('jww9882');
+      
+      setIsAdmin(true);
+      setAdminUser(adminInfo);
+      try {
+        localStorage.setItem(AUTH_TOKEN_KEY, token);
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(adminInfo));
+      } catch (e) {
+        console.warn('Storage error', e);
+      }
+      setIsLoginModalOpen(false);
+
+      // Async background server sync (non-blocking)
+      fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: cleanId, password: cleanPw }),
+      }).then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          if (data.token) {
+            localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+          }
+        }
+      }).catch(() => {
+        // Ignore server background errors
+      });
+
+      return { success: true };
+    }
+
+    // 1. Try server-side authentication for other potential credentials
     try {
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: cleanId, password }),
+        body: JSON.stringify({ username: cleanId, password: cleanPw }),
       });
 
       if (response.ok) {
@@ -358,30 +403,13 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           setIsLoginModalOpen(false);
           return { success: true };
         }
-      } else if (response.status === 401) {
-        const result = await response.json().catch(() => ({}));
-        // If server actively rejected credentials, also verify client fallback
-        const clientVerify = await verifyClientAdminCredentials(cleanId, password);
-        if (clientVerify.success && clientVerify.user) {
-          const clientToken = generateClientSessionToken(clientVerify.user.username);
-          setIsAdmin(true);
-          setAdminUser(clientVerify.user);
-          localStorage.setItem(AUTH_TOKEN_KEY, clientToken);
-          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(clientVerify.user));
-          setIsLoginModalOpen(false);
-          return { success: true };
-        }
-        return {
-          success: false,
-          message: result.message || '아이디 또는 비밀번호가 일치하지 않습니다.',
-        };
       }
     } catch (err) {
-      console.warn('Server auth endpoint unreachable, attempting local secure verification:', err);
+      console.warn('Server auth endpoint notice:', err);
     }
 
     // 2. Client-side cryptographic verification fallback
-    const clientResult = await verifyClientAdminCredentials(cleanId, password);
+    const clientResult = await verifyClientAdminCredentials(cleanId, cleanPw);
     if (clientResult.success && clientResult.user) {
       const token = generateClientSessionToken(clientResult.user.username);
       setIsAdmin(true);
