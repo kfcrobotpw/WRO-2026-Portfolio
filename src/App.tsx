@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { PortfolioProvider } from './context/PortfolioContext';
+import { PortfolioProvider, usePortfolio } from './context/PortfolioContext';
 import { Navbar } from './components/Navbar';
-import { AdminToolbar } from './components/AdminToolbar';
 import { LoginModal } from './components/LoginModal';
 import { AdminPortal } from './components/AdminPortal';
+import { PhotoManagerModal } from './components/modals/PhotoManagerModal';
 import { Hero } from './components/Hero';
 import { CompetitionJourney } from './components/CompetitionJourney';
 import { CoreCapabilities } from './components/CoreCapabilities';
@@ -30,8 +30,36 @@ function checkIsAdminRoute(): boolean {
 }
 
 function PortfolioApp() {
+  const { isAdmin } = usePortfolio();
   const [isAdminView, setIsAdminView] = useState<boolean>(() => checkIsAdminRoute());
   const [activeSection, setActiveSection] = useState('about');
+  const [showPhotoManager, setShowPhotoManager] = useState(false);
+
+  // Shortcut Shift + B to open Photo Manager Modal in main view when logged in
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target && (
+          target.tagName === 'INPUT' || 
+          target.tagName === 'TEXTAREA' || 
+          target.isContentEditable
+        )
+      ) {
+        return;
+      }
+
+      if (e.shiftKey && (e.key === 'B' || e.key === 'b' || e.code === 'KeyB')) {
+        e.preventDefault();
+        setShowPhotoManager((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAdmin]);
 
   // Listen to browser forward/back buttons & hash/URL changes
   useEffect(() => {
@@ -170,8 +198,10 @@ function PortfolioApp() {
         onNavigateToAdmin={navigateToAdmin}
       />
 
-      {/* Admin Mode Floating Toolbar (Only visible when logged in) */}
-      <AdminToolbar />
+      {/* Centralized Photo Manager Modal (Shift + B) */}
+      {showPhotoManager && (
+        <PhotoManagerModal onClose={() => setShowPhotoManager(false)} />
+      )}
 
       {/* Login Authentication Modal */}
       <LoginModal />
