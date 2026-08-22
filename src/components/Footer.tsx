@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { RobotLogo } from './RobotLogo';
-import { Shield, FileCode, ArrowUp, X, Sparkles } from 'lucide-react';
+import { ArrowUp, X, Lock } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigateToAdmin?: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onNavigateToAdmin }) => {
   const [modalContent, setModalContent] = useState<'privacy' | 'terms' | null>(null);
 
   const scrollToTop = () => {
@@ -21,12 +25,22 @@ export const Footer: React.FC = () => {
             <RobotLogo size="sm" />
           </div>
 
-          {/* Center: Copyright Notice (Direct from Image 2) */}
-          <div className="text-center text-slate-400 font-mono text-[11px]">
-            © 2026 My Robot Portfolio. All Rights Reserved.
+          {/* Center: Copyright Notice with discreet Admin Portal Link */}
+          <div className="flex items-center gap-2 text-center text-slate-400 font-mono text-[11px]">
+            <span>© 2026 My Robot Portfolio. All Rights Reserved.</span>
+            {onNavigateToAdmin && (
+              <button
+                onClick={onNavigateToAdmin}
+                className="opacity-30 hover:opacity-100 hover:text-cyan-400 p-1 transition-opacity cursor-pointer inline-flex items-center gap-1"
+                title="관리자 제어 센터 (/admin)"
+                aria-label="Admin Portal"
+              >
+                <Lock size={10} />
+              </button>
+            )}
           </div>
 
-          {/* Right: Policy Links (Direct from Image 2) */}
+          {/* Right: Policy Links */}
           <div className="flex items-center gap-6 font-mono text-[11px]">
             <button
               onClick={() => setModalContent('privacy')}
@@ -43,7 +57,7 @@ export const Footer: React.FC = () => {
             </button>
             <button
               onClick={scrollToTop}
-              className="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 transition-colors"
+              className="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 transition-colors cursor-pointer"
               title="Scroll to Top"
             >
               <ArrowUp size={14} />

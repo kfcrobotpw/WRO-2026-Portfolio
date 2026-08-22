@@ -11,32 +11,83 @@ import { Achievements } from './components/Achievements';
 import { ProjectArchives } from './components/ProjectArchives';
 import { Footer } from './components/Footer';
 
+function checkIsAdminRoute(): boolean {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
+  const search = window.location.search.toLowerCase();
+  return (
+    path === '/admin' ||
+    path.startsWith('/admin/') ||
+    hash === '#admin' ||
+    hash === '#/admin' ||
+    hash.startsWith('#admin') ||
+    hash.startsWith('#/admin') ||
+    search.includes('page=admin') ||
+    search.includes('mode=admin') ||
+    search.includes('admin=true')
+  );
+}
+
 function PortfolioApp() {
-  const [currentPath, setCurrentPath] = useState<string>(() => {
-    return window.location.pathname;
-  });
+  const [isAdminView, setIsAdminView] = useState<boolean>(() => checkIsAdminRoute());
   const [activeSection, setActiveSection] = useState('about');
 
-  // Listen to browser forward/back buttons & URL changes
+  // Listen to browser forward/back buttons & hash/URL changes
   useEffect(() => {
     const handleLocationChange = () => {
-      setCurrentPath(window.location.pathname);
+      setIsAdminView(checkIsAdminRoute());
     };
 
     window.addEventListener('popstate', handleLocationChange);
-    return () => window.removeEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
   }, []);
 
-  const navigateTo = (path: string) => {
-    window.history.pushState({}, '', path);
-    setCurrentPath(path);
+  // Keyboard shortcut (Ctrl+Shift+A or Alt+A) to toggle Admin Mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') || (e.altKey && e.key.toLowerCase() === 'a')) {
+        e.preventDefault();
+        if (isAdminView) {
+          navigateToHome();
+        } else {
+          navigateToAdmin();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAdminView]);
+
+  const navigateToAdmin = () => {
+    try {
+      window.history.pushState({}, '', '/admin');
+    } catch {
+      window.location.hash = '#/admin';
+    }
+    setIsAdminView(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToHome = () => {
+    try {
+      window.history.pushState({}, '', '/');
+    } catch {
+      window.location.hash = '';
+    }
+    setIsAdminView(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Handle section scrolling on public portfolio
   const scrollToSection = (sectionId: string) => {
-    if (currentPath === '/admin') {
-      navigateTo('/');
+    if (isAdminView) {
+      navigateToHome();
       setTimeout(() => {
         const el = document.getElementById(sectionId);
         if (el) {
@@ -66,7 +117,7 @@ function PortfolioApp() {
 
   // IntersectionObserver to auto-update active nav link on scroll
   useEffect(() => {
-    if (currentPath === '/admin') return;
+    if (isAdminView) return;
 
     const sections = ['about', 'journey', 'skills', 'awards', 'portfolio'];
     
@@ -88,11 +139,11 @@ function PortfolioApp() {
 
     window.addEventListener('scroll', handleScrollObserver, { passive: true });
     return () => window.removeEventListener('scroll', handleScrollObserver);
-  }, [currentPath]);
+  }, [isAdminView]);
 
   // If on /admin route, render dedicated Admin Portal
-  if (currentPath === '/admin') {
-    return <AdminPortal onNavigateHome={() => navigateTo('/')} />;
+  if (isAdminView) {
+    return <AdminPortal onNavigateHome={navigateToHome} />;
   }
 
   // Public / Home View (/)
@@ -116,7 +167,7 @@ function PortfolioApp() {
       <Navbar 
         activeSection={activeSection} 
         onNavigate={scrollToSection} 
-        onNavigateToAdmin={() => navigateTo('/admin')}
+        onNavigateToAdmin={navigateToAdmin}
       />
 
       {/* Admin Mode Floating Toolbar (Only visible when logged in) */}
@@ -146,7 +197,7 @@ function PortfolioApp() {
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Footer onNavigateToAdmin={navigateToAdmin} />
 
     </div>
   );
