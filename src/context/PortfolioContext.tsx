@@ -35,15 +35,21 @@ import {
   User 
 } from 'firebase/auth';
 
+export interface AdminUserInfo {
+  username: string;
+  role: string;
+}
+
 interface PortfolioContextType {
   isAdmin: boolean;
+  adminUser: AdminUserInfo | null;
   currentUser: User | null;
   isLoginModalOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
-  login: (password: string) => boolean;
+  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
   loginWithGoogle: () => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isFirebaseSyncing: boolean;
 
   heroData: HeroData;
@@ -74,7 +80,8 @@ interface PortfolioContextType {
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
-const AUTH_KEY = 'robot_portfolio_auth_admin';
+const AUTH_TOKEN_KEY = 'robot_portfolio_session_token';
+const AUTH_USER_KEY = 'robot_portfolio_auth_user';
 const HERO_STORAGE_KEY = 'robot_portfolio_hero_data';
 const COMPS_STORAGE_KEY = 'robot_portfolio_competitions';
 const SKILLS_STORAGE_KEY = 'robot_portfolio_skills';
@@ -83,11 +90,23 @@ const PROJ_STORAGE_KEY = 'robot_portfolio_projects';
 
 export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [adminUser, setAdminUser] = useState<AdminUserInfo | null>(() => {
+    const saved = localStorage.getItem(AUTH_USER_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
   const [isFirebaseSyncing, setIsFirebaseSyncing] = useState<boolean>(true);
 
-  // Admin authentication state
+  // Admin authentication state verified from token
   const [isAdmin, setIsAdmin] = useState<boolean>(() => {
-    return localStorage.getItem(AUTH_KEY) === 'true';
+    return Boolean(localStorage.getItem(AUTH_TOKEN_KEY));
   });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -156,15 +175,49 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return PROJECTS_DATA;
   });
 
-  // Track Firebase Auth status
+  // Track and verify Session Token on boot
   useEffect(() => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (token) {
+      fetch('/api/admin/session', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'x-admin-token': token,
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.authenticated && data.user) {
+            setIsAdmin(true);
+            setAdminUser(data.user);
+          } else {
+            setIsAdmin(false);
+            setAdminUser(null);
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            localStorage.removeItem(AUTH_USER_KEY);
+          }
+        })
+        .catch(() => {
+          // If server is warming up, keep cached state temporarily
+          const savedUser = localStorage.getItem(AUTH_USER_KEY);
+          if (savedUser) {
+            try {
+              setAdminUser(JSON.parse(savedUser));
+              setIsAdmin(true);
+            } catch (e) {
+              // ignore
+            }
+          }
+        });
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      if (user) {
+      if (user && (user.email === 'kfcrobotpw@gmail.com' || user.emailVerified)) {
         setIsAdmin(true);
-        localStorage.setItem(AUTH_KEY, 'true');
       }
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -279,14 +332,36 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => setIsLoginModalOpen(false);
 
-  const login = (password: string) => {
-    if (password === 'jangww9882!') {
-      setIsAdmin(true);
-      localStorage.setItem(AUTH_KEY, 'true');
-      setIsLoginModalOpen(false);
-      return true;
+  // Server-side authentication
+  const login = async (username: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success && result.token) {
+        setIsAdmin(true);
+        setAdminUser(result.user);
+        localStorage.setItem(AUTH_TOKEN_KEY, result.token);
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(result.user));
+        setIsLoginModalOpen(false);
+        return { success: true };
+      }
+
+      return {
+        success: false,
+        message: result.message || '아이디 또는 비밀번호가 일치하지 않습니다.',
+      };
+    } catch (err) {
+      return {
+        success: false,
+        message: '서버와 통신할 수 없습니다. 잠시 후 다시 시도해주세요.',
+      };
     }
-    return false;
   };
 
   const loginWithGoogle = async (): Promise<boolean> => {
@@ -294,7 +369,6 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const res = await signInWithPopup(auth, googleProvider);
       if (res.user) {
         setIsAdmin(true);
-        localStorage.setItem(AUTH_KEY, 'true');
         setIsLoginModalOpen(false);
         return true;
       }
@@ -307,12 +381,19 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const logout = async () => {
     try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } catch (e) {
+      // ignore
+    }
+    try {
       await signOut(auth);
     } catch (e) {
       // ignore
     }
     setIsAdmin(false);
-    localStorage.removeItem(AUTH_KEY);
+    setAdminUser(null);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_USER_KEY);
   };
 
   // Hero updater

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
-import { Lock, KeyRound, Eye, EyeOff, ShieldCheck, AlertCircle, X, Globe } from 'lucide-react';
+import { Lock, User, KeyRound, Eye, EyeOff, ShieldCheck, AlertCircle, X, Globe, Sparkles } from 'lucide-react';
 
 export const LoginModal: React.FC = () => {
   const { isLoginModalOpen, closeLoginModal, login, loginWithGoogle } = usePortfolio();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -12,6 +13,7 @@ export const LoginModal: React.FC = () => {
 
   useEffect(() => {
     if (isLoginModalOpen) {
+      setUsername('');
       setPassword('');
       setErrorMsg('');
       setShowPassword(false);
@@ -20,8 +22,12 @@ export const LoginModal: React.FC = () => {
 
   if (!isLoginModalOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!username.trim()) {
+      setErrorMsg('관리자 ID를 입력해주세요.');
+      return;
+    }
     if (!password) {
       setErrorMsg('비밀번호를 입력해주세요.');
       return;
@@ -30,14 +36,17 @@ export const LoginModal: React.FC = () => {
     setIsSubmitting(true);
     setErrorMsg('');
 
-    setTimeout(() => {
-      const success = login(password);
+    try {
+      const result = await login(username, password);
       setIsSubmitting(false);
 
-      if (!success) {
-        setErrorMsg('비밀번호가 일치하지 않습니다. 다시 시도해주세요.');
+      if (!result.success) {
+        setErrorMsg(result.message || '아이디 또는 비밀번호가 일치하지 않습니다.');
       }
-    }, 250);
+    } catch (err) {
+      setIsSubmitting(false);
+      setErrorMsg('로그인 처리 중 오류가 발생했습니다.');
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -69,29 +78,120 @@ export const LoginModal: React.FC = () => {
               <h3 className="text-lg font-bold font-['Orbitron'] text-white tracking-wider flex items-center gap-2">
                 ADMIN ACCESS
                 <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-700 font-mono">
-                  Firebase
+                  Server Auth
                 </span>
               </h3>
-              <p className="text-xs text-slate-400 font-mono">포트폴리오 클라우드 실시간 편집 인증</p>
+              <p className="text-xs text-slate-400 font-mono">데이터베이스 암호화 인증 & 실시간 동기화</p>
             </div>
           </div>
 
           <button
             id="close-login-modal-btn"
             onClick={closeLoginModal}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Google Sign In Option */}
-        <div className="space-y-3">
+        {/* ID & Password Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* Admin ID Field */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-mono text-cyan-300 font-semibold flex items-center gap-1.5">
+              <User size={14} className="text-cyan-400" />
+              <span>ADMIN ID (계정)</span>
+            </label>
+
+            <input
+              id="admin-username-input"
+              type="text"
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (errorMsg) setErrorMsg('');
+              }}
+              placeholder="관리자 ID를 입력하세요"
+              autoComplete="off"
+              className="w-full px-4 py-2.5 bg-[#050c17] border border-slate-700 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 focus:outline-none font-mono tracking-wider transition-all"
+            />
+          </div>
+
+          {/* Password Field */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-mono text-cyan-300 font-semibold flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <KeyRound size={14} className="text-cyan-400" />
+                SECURITY PASSWORD
+              </span>
+            </label>
+
+            <div className="relative">
+              <input
+                id="admin-password-input"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errorMsg) setErrorMsg('');
+                }}
+                placeholder="비밀번호를 입력하세요"
+                className="w-full px-4 py-2.5 bg-[#050c17] border border-slate-700 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 focus:outline-none font-mono tracking-wider pr-11 transition-all"
+              />
+              
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-300 p-1 transition-colors cursor-pointer"
+                title={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            {errorMsg && (
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-950/50 border border-red-500/50 text-red-300 text-xs font-mono">
+                <AlertCircle size={14} className="flex-shrink-0 text-red-400" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2">
+            <button
+              id="submit-login-btn"
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-3 px-6 rounded-xl bg-cyan-400 hover:bg-cyan-300 active:scale-[0.99] text-[#060b13] font-bold font-['Orbitron'] tracking-widest text-xs uppercase shadow-[0_0_20px_rgba(34,211,238,0.5)] hover:shadow-[0_0_30px_rgba(34,211,238,0.8)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  <span>AUTHENTICATING (서버 검증 중)...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck size={16} />
+                  <span>LOGIN & UNLOCK EDITOR</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Google Sign In Alternative */}
+          <div className="relative flex items-center justify-center pt-2">
+            <div className="border-t border-slate-800 w-full" />
+            <span className="bg-[#08111e] px-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest absolute">
+              또는 Google 로그인
+            </span>
+          </div>
+
           <button
             type="button"
             onClick={handleGoogleLogin}
             disabled={isGoogleSubmitting}
-            className="w-full py-3 px-4 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400/80 hover:bg-slate-800 text-white font-mono text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-sm cursor-pointer disabled:opacity-60"
+            className="w-full py-2.5 px-4 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400/80 hover:bg-slate-800 text-white font-mono text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-sm cursor-pointer disabled:opacity-60"
           >
             {isGoogleSubmitting ? (
               <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
@@ -115,83 +215,13 @@ export const LoginModal: React.FC = () => {
                 />
               </svg>
             )}
-            <span>Sign in with Google (Firebase)</span>
+            <span>Sign in with Google</span>
           </button>
 
-          <div className="relative flex items-center justify-center">
-            <div className="border-t border-slate-800 w-full" />
-            <span className="bg-[#08111e] px-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest absolute">
-              또는 관리자 비밀번호
-            </span>
-          </div>
-        </div>
-
-        {/* Password Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-          <div className="space-y-2">
-            <label className="block text-xs font-mono text-cyan-300 font-semibold flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <KeyRound size={14} className="text-cyan-400" />
-                SECURITY KEYCODE
-              </span>
-            </label>
-
-            <div className="relative">
-              <input
-                id="admin-password-input"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errorMsg) setErrorMsg('');
-                }}
-                placeholder="비밀번호를 입력하세요"
-                className="w-full px-4 py-3 bg-[#050c17] border border-slate-700 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 focus:outline-none font-mono tracking-wider pr-11 transition-all"
-              />
-              
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-300 p-1 transition-colors"
-                title={showPassword ? 'Hide Password' : 'Show Password'}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-
-            {errorMsg && (
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-950/50 border border-red-500/50 text-red-300 text-xs font-mono">
-                <AlertCircle size={14} className="flex-shrink-0 text-red-400" />
-                <span>{errorMsg}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="pt-1">
-            <button
-              id="submit-login-btn"
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-3.5 px-6 rounded-xl bg-cyan-400 hover:bg-cyan-300 active:scale-[0.99] text-[#060b13] font-bold font-['Orbitron'] tracking-widest text-xs uppercase shadow-[0_0_20px_rgba(34,211,238,0.5)] hover:shadow-[0_0_30px_rgba(34,211,238,0.8)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  <span>AUTHENTICATING...</span>
-                </>
-              ) : (
-                <>
-                  <ShieldCheck size={16} />
-                  <span>UNLOCK EDITOR ACCESS</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          <div className="text-center">
+          <div className="text-center pt-1">
             <p className="text-[11px] text-slate-500 font-mono flex items-center justify-center gap-1.5">
               <Globe size={12} className="text-cyan-500" />
-              Firestore Cloud Database 실시간 자동 동기화
+              <span>안전한 서버 측 솔트 해시 암호화 검증</span>
             </p>
           </div>
         </form>

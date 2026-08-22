@@ -112,9 +112,26 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "email", "message"]
+    },
+    "AdminUser": {
+      "title": "Administrator Account Security Record",
+      "description": "Hashed admin credentials and RBAC record - strictly protected server-side",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string", "maxLength": 100 },
+        "passwordHash": { "type": "string", "maxLength": 500 },
+        "salt": { "type": "string", "maxLength": 200 },
+        "role": { "type": "string", "enum": ["admin"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["username", "passwordHash", "salt", "role"]
     }
   },
   "firestore": {
+    "/admins/{adminId}": {
+      "schema": "AdminUser",
+      "description": "Protected administrator accounts. Direct client reads and writes are blocked by security rules."
+    },
     "/settings/hero": {
       "schema": "HeroSettings",
       "description": "Singleton document storing the hero section content"

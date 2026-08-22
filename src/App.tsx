@@ -3,19 +3,53 @@ import { PortfolioProvider } from './context/PortfolioContext';
 import { Navbar } from './components/Navbar';
 import { AdminToolbar } from './components/AdminToolbar';
 import { LoginModal } from './components/LoginModal';
+import { AdminPortal } from './components/AdminPortal';
 import { Hero } from './components/Hero';
 import { CompetitionJourney } from './components/CompetitionJourney';
 import { CoreCapabilities } from './components/CoreCapabilities';
 import { Achievements } from './components/Achievements';
 import { ProjectArchives } from './components/ProjectArchives';
-import { InitiateConnection } from './components/InitiateConnection';
 import { Footer } from './components/Footer';
 
 function PortfolioApp() {
+  const [currentPath, setCurrentPath] = useState<string>(() => {
+    return window.location.pathname;
+  });
   const [activeSection, setActiveSection] = useState('about');
 
-  // Handle section scrolling
+  // Listen to browser forward/back buttons & URL changes
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Handle section scrolling on public portfolio
   const scrollToSection = (sectionId: string) => {
+    if (currentPath === '/admin') {
+      navigateTo('/');
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          const navOffset = 80;
+          const elementPosition = el.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - navOffset;
+          window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+          setActiveSection(sectionId);
+        }
+      }, 100);
+      return;
+    }
+
     const el = document.getElementById(sectionId);
     if (el) {
       const navOffset = 80;
@@ -32,7 +66,9 @@ function PortfolioApp() {
 
   // IntersectionObserver to auto-update active nav link on scroll
   useEffect(() => {
-    const sections = ['about', 'journey', 'skills', 'awards', 'portfolio', 'contact'];
+    if (currentPath === '/admin') return;
+
+    const sections = ['about', 'journey', 'skills', 'awards', 'portfolio'];
     
     const handleScrollObserver = () => {
       const scrollPosition = window.scrollY + 200;
@@ -52,8 +88,14 @@ function PortfolioApp() {
 
     window.addEventListener('scroll', handleScrollObserver, { passive: true });
     return () => window.removeEventListener('scroll', handleScrollObserver);
-  }, []);
+  }, [currentPath]);
 
+  // If on /admin route, render dedicated Admin Portal
+  if (currentPath === '/admin') {
+    return <AdminPortal onNavigateHome={() => navigateTo('/')} />;
+  }
+
+  // Public / Home View (/)
   return (
     <div className="relative min-h-screen bg-[#060b13] text-slate-100 selection:bg-cyan-500 selection:text-black overflow-x-hidden font-sans">
       
@@ -71,9 +113,13 @@ function PortfolioApp() {
       <div className="fixed bottom-40 right-10 w-96 h-96 bg-purple-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
 
       {/* Sticky Navigation Header */}
-      <Navbar activeSection={activeSection} onNavigate={scrollToSection} />
+      <Navbar 
+        activeSection={activeSection} 
+        onNavigate={scrollToSection} 
+        onNavigateToAdmin={() => navigateTo('/admin')}
+      />
 
-      {/* Admin Mode Floating Toolbar */}
+      {/* Admin Mode Floating Toolbar (Only visible when logged in) */}
       <AdminToolbar />
 
       {/* Login Authentication Modal */}
@@ -97,9 +143,6 @@ function PortfolioApp() {
         {/* 5. Project Archives & Technical Blueprints */}
         <ProjectArchives />
 
-        {/* 6. Initiate Connection & Transmission */}
-        <InitiateConnection />
-
       </main>
 
       {/* Footer */}
@@ -116,4 +159,3 @@ export default function App() {
     </PortfolioProvider>
   );
 }
-

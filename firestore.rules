@@ -32,6 +32,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Admins Collection - strictly blocked from all client-side direct reads and writes
+    // 일반 사용자가 클라이언트 SDK에서 관리자 계정 정보나 비밀번호 해시를 직접 조회할 수 없도록 완벽 차단
+    match /admins/{adminId} {
+      allow read, write: if false;
+    }
+
     // Settings (Hero singleton)
     match /settings/{settingId} {
       allow read: if isValidId(settingId);

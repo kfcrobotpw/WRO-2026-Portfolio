@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { RobotLogo } from './RobotLogo';
 import { usePortfolio } from '../context/PortfolioContext';
-import { Menu, X, Terminal, Sparkles, LogIn, Lock, ShieldCheck, LogOut } from 'lucide-react';
+import { Menu, X, Terminal, Sparkles, ShieldCheck, LogOut, Settings } from 'lucide-react';
 
 interface NavbarProps {
   activeSection: string;
   onNavigate: (sectionId: string) => void;
+  onNavigateToAdmin?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate }) => {
-  const { isAdmin, openLoginModal, logout } = usePortfolio();
+export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onNavigateToAdmin }) => {
+  const { isAdmin, logout } = usePortfolio();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -27,11 +28,20 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate }) => 
     { id: 'skills', label: 'SKILLS' },
     { id: 'awards', label: 'AWARDS' },
     { id: 'portfolio', label: 'PORTFOLIO' },
-    { id: 'contact', label: 'CONTACT' },
   ];
 
   const handleLinkClick = (id: string) => {
     onNavigate(id);
+    setMobileMenuOpen(false);
+  };
+
+  const handleAdminClick = () => {
+    if (onNavigateToAdmin) {
+      onNavigateToAdmin();
+    } else {
+      window.history.pushState({}, '', '/admin');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
     setMobileMenuOpen(false);
   };
 
@@ -44,20 +54,23 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate }) => 
           : 'bg-transparent border-b border-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex items-center justify-between h-18 sm:h-20">
           {/* Logo */}
           <button
             id="nav-logo-btn"
             onClick={() => handleLinkClick('about')}
-            className="flex items-center gap-2 group cursor-pointer focus:outline-none"
+            className="flex items-center gap-2 group cursor-pointer focus:outline-none z-10"
             aria-label="Home"
           >
             <RobotLogo size="md" />
           </button>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 lg:gap-8" aria-label="Main Navigation">
+          {/* Desktop Navigation Links - Centered */}
+          <nav
+            className="hidden md:flex items-center gap-6 lg:gap-8 absolute left-1/2 -translate-x-1/2"
+            aria-label="Main Navigation"
+          >
             {navItems.map((item) => {
               const isActive = activeSection === item.id;
               return (
@@ -80,70 +93,56 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate }) => 
             })}
           </nav>
 
-          {/* Right Action: HIRE ME button + LOG IN at the top right end */}
-          <div className="hidden md:flex items-center gap-3">
-            <button
-              id="hire-me-btn"
-              onClick={() => handleLinkClick('contact')}
-              className="relative inline-flex items-center justify-center px-5 py-2 text-xs font-bold font-['Orbitron'] tracking-widest text-[#060b13] bg-cyan-400 hover:bg-cyan-300 rounded-[6px] shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)] transition-all duration-200 uppercase cursor-pointer group active:scale-95"
-            >
-              <span className="relative z-10">HIRE ME</span>
-              <div className="absolute inset-0 bg-white/20 rounded-[6px] opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-
-            {/* LOG IN button at the far right */}
-            {isAdmin ? (
+          {/* Right Action / Admin Status */}
+          <div className="hidden md:flex items-center z-10 min-w-[32px] justify-end">
+            {isAdmin && (
               <div className="flex items-center gap-1.5 pl-2 border-l border-slate-800">
-                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 text-xs font-mono font-bold">
+                <button
+                  onClick={handleAdminClick}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-500/50 text-emerald-300 text-xs font-mono font-bold transition-all cursor-pointer"
+                  title="관리자 제어 센터 (/admin) 열기"
+                >
                   <ShieldCheck size={14} className="text-emerald-400" />
                   <span className="text-[11px]">ADMIN ON</span>
-                </div>
+                  <Settings size={12} className="text-emerald-400" />
+                </button>
+
                 <button
                   id="nav-logout-btn"
                   onClick={logout}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-950/40 border border-transparent hover:border-red-500/40 transition-colors"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-950/40 border border-transparent hover:border-red-500/40 transition-colors cursor-pointer"
                   title="로그아웃"
                 >
                   <LogOut size={16} />
                 </button>
               </div>
-            ) : (
-              <button
-                id="nav-login-btn"
-                onClick={openLoginModal}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold font-['Orbitron'] tracking-wider text-cyan-300 hover:text-white bg-slate-950/80 hover:bg-cyan-950/50 border border-cyan-500/50 hover:border-cyan-400 rounded-[6px] shadow-[0_0_12px_rgba(34,211,238,0.2)] hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all cursor-pointer group"
-              >
-                <LogIn size={13} className="text-cyan-400 group-hover:scale-110 transition-transform" />
-                <span>LOG IN</span>
-              </button>
             )}
           </div>
 
-          {/* Mobile menu and mobile login button */}
+          {/* Mobile menu and controls */}
           <div className="flex md:hidden items-center gap-2">
-            {isAdmin ? (
-              <button
-                onClick={logout}
-                className="px-2.5 py-1.5 text-[10px] font-bold font-['Orbitron'] text-red-300 bg-red-950/60 border border-red-500/50 rounded flex items-center gap-1"
-              >
-                <LogOut size={12} />
-                <span>LOG OUT</span>
-              </button>
-            ) : (
-              <button
-                id="mobile-login-btn"
-                onClick={openLoginModal}
-                className="px-2.5 py-1.5 text-[10px] font-bold font-['Orbitron'] tracking-wider text-cyan-300 bg-slate-950 border border-cyan-500/50 rounded flex items-center gap-1"
-              >
-                <LogIn size={12} />
-                <span>LOG IN</span>
-              </button>
+            {isAdmin && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleAdminClick}
+                  className="px-2.5 py-1.5 text-[10px] font-bold font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-500/50 rounded flex items-center gap-1"
+                >
+                  <ShieldCheck size={12} />
+                  <span>ADMIN</span>
+                </button>
+                <button
+                  onClick={logout}
+                  className="px-2 py-1.5 text-[10px] font-bold font-mono text-red-300 bg-red-950/60 border border-red-500/50 rounded flex items-center gap-1"
+                >
+                  <LogOut size={12} />
+                </button>
+              </div>
             )}
 
             <button
               id="mobile-menu-toggle"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-slate-300 hover:text-cyan-400 rounded-lg hover:bg-slate-900 border border-slate-800 focus:outline-none"
+              className="p-2 text-slate-300 hover:text-cyan-400 rounded-lg hover:bg-slate-900 border border-slate-800 focus:outline-none cursor-pointer"
               aria-label="Toggle mobile menu"
             >
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -173,7 +172,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate }) => 
               <button
                 key={item.id}
                 onClick={() => handleLinkClick(item.id)}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-['Orbitron'] tracking-wider transition-colors ${
+                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-['Orbitron'] tracking-wider transition-colors cursor-pointer ${
                   activeSection === item.id
                     ? 'bg-cyan-950/60 text-cyan-300 border border-cyan-800/60'
                     : 'text-slate-300 hover:bg-slate-900/60 hover:text-cyan-400'
@@ -187,37 +186,25 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate }) => 
             ))}
           </div>
 
-          <div className="pt-3 space-y-2">
-            <button
-              onClick={() => handleLinkClick('contact')}
-              className="w-full py-3 text-center text-xs font-bold font-['Orbitron'] tracking-widest text-[#060b13] bg-cyan-400 rounded-lg shadow-[0_0_20px_rgba(34,211,238,0.5)]"
-            >
-              INITIATE CONNECTION (HIRE ME)
-            </button>
-
-            {isAdmin ? (
+          {isAdmin && (
+            <div className="pt-3 space-y-2 border-t border-slate-800/80">
+              <button
+                onClick={handleAdminClick}
+                className="w-full py-2.5 text-center text-xs font-bold font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/50 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Settings size={14} />
+                <span>관리자 제어 센터 (/admin)</span>
+              </button>
               <button
                 onClick={logout}
-                className="w-full py-2.5 text-center text-xs font-bold font-mono text-red-300 bg-red-950/40 border border-red-500/40 rounded-lg"
+                className="w-full py-2.5 text-center text-xs font-bold font-mono text-red-300 bg-red-950/40 border border-red-500/40 rounded-lg cursor-pointer"
               >
-                ADMIN LOGOUT (편집 모드 종료)
+                ADMIN LOGOUT (로그아웃)
               </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  openLoginModal();
-                }}
-                className="w-full py-2.5 text-center text-xs font-bold font-['Orbitron'] text-cyan-300 bg-slate-950 border border-cyan-500/50 rounded-lg flex items-center justify-center gap-1.5"
-              >
-                <LogIn size={14} />
-                <span>ADMIN LOG IN (비밀번호: jww9882!)</span>
-              </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </header>
   );
 };
-

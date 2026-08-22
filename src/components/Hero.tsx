@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { HeroRobotVisual } from './HeroRobotVisual';
-import { ArrowRight, FileText, ChevronDown, Check, Sparkles, Terminal, Edit3 } from 'lucide-react';
+import { ArrowRight, FileText, Edit3 } from 'lucide-react';
 import { RobotLogo } from './RobotLogo';
 import { usePortfolio } from '../context/PortfolioContext';
 import { EditHeroModal } from './modals/EditHeroModal';
@@ -161,7 +161,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
               </div>
               <button
                 onClick={() => setShowResumeModal(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
               >
                 ✕
               </button>
@@ -209,15 +209,15 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
               <button
                 onClick={() => {
                   setShowResumeModal(false);
-                  onNavigate('contact');
+                  onNavigate('portfolio');
                 }}
-                className="px-5 py-2.5 text-xs font-bold font-['Orbitron'] text-[#060b13] bg-cyan-400 hover:bg-cyan-300 rounded-lg"
+                className="px-5 py-2.5 text-xs font-bold font-['Orbitron'] text-[#060b13] bg-cyan-400 hover:bg-cyan-300 rounded-lg cursor-pointer"
               >
-                CONTACT ME
+                EXPLORE PROJECTS
               </button>
               <button
                 onClick={() => setShowResumeModal(false)}
-                className="px-4 py-2.5 text-xs font-bold text-slate-400 hover:text-white"
+                className="px-4 py-2.5 text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
               >
                 CLOSE
               </button>
